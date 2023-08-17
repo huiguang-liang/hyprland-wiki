@@ -25,14 +25,14 @@ If you have any concerns (updates, broken pkgbuild, etc), you should contact the
 ## How to get Hyprland to possibly work on Nvidia
 ### Steps in General
 1. Install the `nvidia-dkms` driver
-2. Add NVIDIA modules to your initramfs
+2. Add NVIDIA modules to your initramfs and regenerate initramfs.
 3. Set a kernel parameter to [enable Direct Rendering Manager on boot](https://wiki.archlinux.org/title/NVIDIA#DRM_kernel_mode_setting).
 #### 1. Installing the `nvidia-dkms` Driver
-a. For Arch users, ensure that your kernel headers are installed, and if not, install them as necessary. The following command(s) assumes you have `sudo` permissions and are using the `linux` [kernel](https://archlinux.org/packages/?name=linux).
+For Arch users, ensure that your kernel headers are installed, and if not, install them as necessary. The following command(s) assumes you have `sudo` permissions and are using the `linux` [kernel](https://archlinux.org/packages/?name=linux).
 ```
 $ sudo pacman -S --needed linux-headers
 ```
-b. If the headers are successfully installed, then you can install the `nvidia-dkms` driver as follows.
+If the headers are successfully installed, then you can install the `nvidia-dkms` driver as follows.
 ```
 $ sudo pacman -S nvidia-dkms
 ```
@@ -40,12 +40,16 @@ $ sudo pacman -S nvidia-dkms
 > Whenever the driver is upgraded, initramfs needs to be updated as well. A `pacman` [hook](https://wiki.archlinux.org/title/NVIDIA#pacman_hook) can help to automate this, in case this step is accidentally skipped.
 
 #### 2. Add NVIDIA modules to your initramfs
-a. For Arch users, the following four modules need to be added to `mkinitcpio.conf`. Assuming you have `sudo` permissions, open the `/etc/mkinitcpio.conf` file in an editor of your choice. Look for the line with the `MODULES` parameter, and append the following four modules to it.
+For Arch users, the following four modules need to be added to `mkinitcpio.conf`. Assuming you have `sudo` permissions, open the `/etc/mkinitcpio.conf` file in an editor of your choice. Look for the line with the `MODULES` parameter, and append the following four modules to it.
 ```
-MODULES=(<your existing modules> nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+MODULES=(<your existing modules ...> nvidia nvidia_modeset nvidia_uvm nvidia_drm)
 ```
-
-For people using [systemd-boot](https://wiki.archlinux.org/title/systemd-boot) you can do this adding `nvidia_drm.modeset=1` to the end of `/boot/loader/entries/arch.conf`.
+Then, regenerate your initramfs as follows.
+```
+$ sudo mkinitcpio -P
+```
+#### 3. Set kernel parameter on boot
+For people using [systemd-boot](https://wiki.archlinux.org/title/systemd-boot) you can do this by adding `nvidia_drm.modeset=1` to the end of `/boot/loader/entries/arch.conf`.
 For people using [grub](https://wiki.archlinux.org/title/GRUB) you can do this by adding `nvidia_drm.modeset=1` to the end of `GRUB_CMDLINE_LINUX_DEFAULT=` in `/etc/default/grub`, then run `# grub-mkconfig -o /boot/grub/grub.cfg`
 For others check out [kernel parameters](https://wiki.archlinux.org/title/Kernel_parameters) and how to add `nvidia_drm.modeset=1` to your specific bootloader.
 
