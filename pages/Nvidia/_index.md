@@ -49,15 +49,26 @@ Then, regenerate your initramfs as follows.
 $ sudo mkinitcpio -P
 ```
 #### 3. Set kernel parameter on boot
-For people using [systemd-boot](https://wiki.archlinux.org/title/systemd-boot) you can do this by adding `nvidia_drm.modeset=1` to the end of `/boot/loader/entries/arch.conf`.
+For people using [systemd-boot](https://wiki.archlinux.org/title/systemd-boot) you can do this by adding `nvidia_drm.modeset=1` to the end of your target kernel boot entry. This should be a `.conf` file found in `/boot/loader/entries/`. Find the right file, and append the [parameter](https://wiki.archlinux.org/title/systemd-boot#Loader_configuration) to the `options` line. Each parameter should be space-separated. It should look like this once you're done.
+```
+<some existing lines...>
+options <some existing options> nvidia_drm.modeset=1
+```
 For people using [grub](https://wiki.archlinux.org/title/GRUB) you can do this by adding `nvidia_drm.modeset=1` to the end of `GRUB_CMDLINE_LINUX_DEFAULT=` in `/etc/default/grub`, then run `# grub-mkconfig -o /boot/grub/grub.cfg`
+
 For others check out [kernel parameters](https://wiki.archlinux.org/title/Kernel_parameters) and how to add `nvidia_drm.modeset=1` to your specific bootloader.
 
-in `/etc/mkinitcpio.conf` add `nvidia nvidia_modeset nvidia_uvm nvidia_drm` to your `MODULES`
-
-run `# mkinitcpio --config /etc/mkinitcpio.conf --generate /boot/initramfs-custom.img` (make sure you have the `linux-headers` package installed first)
-
-add a new line to `/etc/modprobe.d/nvidia.conf` (make it if it does not exist) and add the line `options nvidia-drm modeset=1`
+#### Optional: Blacklist `nouveau` (and other GPU drivers)
+The `nouveau` driver and iGPUs, if they exist on your system, may lead to [failures or errors](https://wiki.archlinux.org/title/NVIDIA/Troubleshooting#Black_screen_on_systems_with_integrated_GPU) while booting.
+If you have issues with the screen freezing up during the boot sequence, add the following entry into `/etc/modprobe.d/blacklist.conf`. Create the file if it does not already exist. Intel iGPUs can be disabled by blacklisting the `i915` or `intel_agp` modules. VIA relies on the `viafb` module, while AMD iGPUs may load `radeon` or `amdgpu` modules, so add the following lines corresponding to the iGPU that you have as necessary. To be absolutely sure that nouveau is not loading, you can also include an entry for `nouveau`, but this may not be essential.
+```
+install i915 /usr/bin/false
+install intel_agp /usr/bin/false
+install viafb /usr/bin/false
+install radeon /usr/bin/false
+install amdgpu /usr/bin/false
+install nouveau /usr/bin/false
+```
 
 More information is available here:
 [https://wiki.archlinux.org/title/NVIDIA#DRM_kernel_mode_setting](https://wiki.archlinux.org/title/NVIDIA#DRM_kernel_mode_setting)
